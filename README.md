@@ -61,10 +61,31 @@ assistant: all code, packaging and documentation.
 `settings`, `shortcuts`, `setup [tiling|resolution]`, `quit [tiling|resolution]`,
 `remove`, `export FILE` and `import FILE`.
 
+## Installing
+
+On **Linux Mint 22.3** (Cinnamon 6.6, Ubuntu 24.04 base), download the
+package from the [latest release](https://github.com/dschaefer79/cinnamon-tile-menu/releases/latest)
+and install it:
+
+```
+wget https://github.com/dschaefer79/cinnamon-tile-menu/releases/download/v1.15/cinnamon-tile-menu_1.15-1_all.deb
+sudo apt install ./cinnamon-tile-menu_1.15-1_all.deb
+```
+
+Both applets are put on the panel at the next login, or right away after
+`cinnamon-tile-menu setup`.
+
+## Building the .deb
+
+```
+git archive --prefix=cinnamon-tile-menu-1.15/ -o cinnamon-tile-menu-1.15.tar.gz HEAD
+packaging/build-deb.sh cinnamon-tile-menu-1.15.tar.gz 1.15 .
+```
+
 ## Building the RPM
 
 ```
-git archive --prefix=cinnamon-tile-menu-1.14/ -o ~/rpmbuild/SOURCES/cinnamon-tile-menu-1.14.tar.gz HEAD
+git archive --prefix=cinnamon-tile-menu-1.15/ -o ~/rpmbuild/SOURCES/cinnamon-tile-menu-1.15.tar.gz HEAD
 rpmbuild -ba cinnamon-tile-menu.spec
 ```
 

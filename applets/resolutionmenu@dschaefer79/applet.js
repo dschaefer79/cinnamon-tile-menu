@@ -16,9 +16,13 @@ const Settings = imports.ui.settings;
 const St = imports.gi.St;
 const Util = imports.misc.util;
 
-const Me = imports.ui.extension.getCurrentExtension();
-const Display = Me.imports.display;
-const System = Me.imports.system;
+// The applet's own modules: Cinnamon 6.7 and later find them with
+// getCurrentExtension(), earlier versions (Linux Mint 22) with require().
+const Extension = imports.ui.extension;
+const Me = Extension.getCurrentExtension ? Extension.getCurrentExtension().imports : null;
+const localModule = name => (Me ? Me[name] : require(`./${name}`));
+const Display = localModule('display');
+const System = localModule('system');
 
 const SIZE_PATTERN = /^[1-9][0-9]{2,4}x[1-9][0-9]{2,4}$/;
 

@@ -17,9 +17,13 @@ const Settings = imports.ui.settings;
 const Util = imports.misc.util;
 const St = imports.gi.St;
 
-const Me = imports.ui.extension.getCurrentExtension();
-const Tiling = Me.imports.tiler;
-const System = Me.imports.system;
+// The applet's own modules: Cinnamon 6.7 and later find them with
+// getCurrentExtension(), earlier versions (Linux Mint 22) with require().
+const Extension = imports.ui.extension;
+const Me = Extension.getCurrentExtension ? Extension.getCurrentExtension().imports : null;
+const localModule = name => (Me ? Me[name] : require(`./${name}`));
+const Tiling = localModule('tiler');
+const System = localModule('system');
 
 const DBUS_PATH = '/org/dschaefer/TileMenu';
 const DBUS_XML = `<node>

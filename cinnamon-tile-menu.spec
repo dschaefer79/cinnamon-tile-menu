@@ -5,7 +5,7 @@
 %global applets %{_datadir}/cinnamon/applets
 
 Name:           cinnamon-tile-menu
-Version:        1.14
+Version:        1.15
 Release:        1%{?dist}
 Summary:        Cinnamon panel applets for window tiling and screen resolution
 License:        GPL-3.0-or-later
@@ -110,6 +110,11 @@ done
 %{applets}/resolutionmenu@dschaefer79/
 
 %changelog
+* Sun Oct 11 2026 dschaefer79 <7472357+dschaefer79@users.noreply.github.com> - 1.15-1
+- Works with Cinnamon 6.6 (Linux Mint 22.3): the applets load their own
+  modules with require() where Cinnamon has no getCurrentExtension()
+- packaging/build-deb.sh builds a .deb for Linux Mint 22.3
+
 * Sun Oct 11 2026 dschaefer79 <7472357+dschaefer79@users.noreply.github.com> - 1.14-1
 - License: GPL-3.0-or-later (was MIT), with the license text and a
   header in every source file
