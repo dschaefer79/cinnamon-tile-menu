@@ -1,0 +1,403 @@
+#!/usr/bin/sh
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 dschaefer79
+# Written entirely with Claude Code (Anthropic).
+# Helper for the Window Tiling and Resolution applets on Cinnamon.
+#   cinnamon-tile-menu tile auto|4|3|2|rows-3|rows-2|grid-2x2|grid-3x2|grid-4x2|restore
+#   cinnamon-tile-menu resolution WIDTHxHEIGHT
+#   cinnamon-tile-menu add-mode WIDTHxHEIGHT   add the size to the screen's modes (X11)
+#   cinnamon-tile-menu toggle snap|tileNew|disabled   flip a switch
+#   cinnamon-tile-menu get-toggles       print the switches, as KEY=true|false
+#   cinnamon-tile-menu shortcuts         open the keyboard shortcut settings
+#   cinnamon-tile-menu settings          open the Window Tiling settings
+#   cinnamon-tile-menu setup [--auto|tiling|resolution]   put both applets
+#                                        (or the one named) on the panel
+#   cinnamon-tile-menu remove            take both applets off the panels
+#   cinnamon-tile-menu quit [tiling|resolution]   take the Window Tiling
+#                                        (default) or Resolution applet off the
+#                                        panels (setup puts it back)
+#   cinnamon-tile-menu export FILE       save the settings of both applets and
+#                                        the keyboard shortcuts to FILE
+#   cinnamon-tile-menu import FILE       load them from FILE
+#   cinnamon-tile-menu save-dialog|load-dialog   the same, choosing the file
+set -u
+
+tiling=tilemenu@dschaefer79
+resolutions=resolutionmenu@dschaefer79
+confdir="${XDG_CONFIG_HOME:-$HOME/.config}/cinnamon-tile-menu"
+marker="$confdir/added"
+# Bump when the panel setup changes, so --auto upgrades existing users.
+setup_version=1
+
+fail() {
+    echo "cinnamon-tile-menu: $*" >&2
+    command -v notify-send >/dev/null 2>&1 &&
+        notify-send -a "Window Tiling" -i dialog-error "Window Tiling" "$*"
+    exit 1
+}
+
+# Call a method of an applet: call OBJECT METHOD ARG. Prints nothing.
+call() {
+    out=$(gdbus call --session --dest org.Cinnamon --object-path "/org/dschaefer/$1" \
+        --method "org.dschaefer.$1.$2" "$3" 2>&1) && return
+    case $out in
+        *UnknownMethod*|*"No such interface"*|*UnknownObject*|*ServiceUnknown*)
+            fail "the applet is not on the panel (try: cinnamon-tile-menu setup)" ;;
+    esac
+    fail "$(echo "$out" | sed 's/^Error: GDBus\.Error:[^:]*: //')"
+}
+
+tile() {
+    case $1 in
+        auto|4|3|2|rows-3|rows-2|grid-2x2|grid-3x2|grid-4x2|restore) call TileMenu Tile "$1" ;;
+        *) fail "unknown tile action: $1" ;;
+    esac
+}
+
+toggle() {
+    case $1 in
+        snap|tileNew|disabled) call TileMenu Toggle "$1" ;;
+        *) fail "usage: cinnamon-tile-menu toggle snap|tileNew|disabled" ;;
+    esac
+}
+
+# The applet keeps its settings in a JSON file per instance.
+get_toggles() {
+    python3 -I - "${XDG_CONFIG_HOME:-$HOME/.config}/cinnamon/spices/$tiling" <<'EOF'
+import glob, json, os, sys
+files = sorted(glob.glob(os.path.join(sys.argv[1], "*.json")))
+settings = {}
+if files:
+    with open(files[0]) as f:
+        settings = json.load(f)
+for key in ("snap", "tileNew", "disabled"):
+    value = settings.get(key, {}).get("value", settings.get(key, {}).get("default", False))
+    print(f"{key}={'true' if value else 'false'}")
+EOF
+}
+
+# Instance id of an applet on the panel, or nothing.
+instance() {
+    gsettings get org.cinnamon enabled-applets |
+        tr -d "[]'" | tr ',' '\n' | awk -F: -v u="$1" '$4 == u { print $5; exit }'
+}
+
+open_settings() {
+    id=$(instance "$tiling")
+    [ -n "$id" ] || fail "the Window Tiling applet is not on the panel (try: cinnamon-tile-menu setup)"
+    xlet-settings applet "$tiling" -i "$id" -t "$1" >/dev/null 2>&1 &
+}
+
+check_size() {
+    case $1 in
+        [1-9]*x[1-9]*) ;;
+        *) fail "usage: cinnamon-tile-menu $2 WIDTHxHEIGHT" ;;
+    esac
+    case ${1%x*}${1#*x} in *[!0-9]*) fail "invalid resolution: $1" ;; esac
+}
+
+is_wayland() {
+    [ "${XDG_SESSION_TYPE:-}" = wayland ]
+}
+
+# X11: make sure the first connected output offers $1, adding it with
+# xrandr like xfce-resolution-menu does. Print "OUTPUT added|present".
+x11_mode() {
+    command -v xrandr >/dev/null 2>&1 || fail "xrandr is not installed"
+    out=$(xrandr --query | awk '$2 == "connected" { print $1; exit }')
+    [ -n "$out" ] || fail "no connected output found"
+    if xrandr --query | awk -v o="$out" -v m="$1" '
+            $1 == o { inside = 1; next }
+            inside && /^[^ \t]/ { exit }
+            inside && $1 == m { found = 1; exit }
+            END { exit !found }'; then
+        echo "$out present"
+        return
+    fi
+    w=${1%x*} h=${1#*x}
+    # VNC servers accept any size; real outputs need proper CVT timings.
+    timings=""
+    case $out in
+        VNC-*) ;;
+        *) command -v cvt >/dev/null 2>&1 &&
+               timings=$(cvt "$w" "$h" 60 | sed -n 's/^Modeline "[^"]*" *//p') ;;
+    esac
+    [ -n "$timings" ] || timings="0 $w $w $w $w $h $h $h $h"
+    # --newmode fails harmlessly if the mode exists but isn't on this output.
+    xrandr --newmode "$1" $timings 2>/dev/null
+    xrandr --addmode "$out" "$1" || fail "could not add $1 to $out"
+    echo "$out added"
+}
+
+resolution() {
+    check_size "$1" resolution
+    if is_wayland; then
+        call ResolutionMenu SetResolution "$1"
+    else
+        target=$(x11_mode "$1") || exit 1
+        set -- $target "$1"
+        xrandr --output "$1" --mode "$3" || fail "could not switch $1 to $3"
+    fi
+}
+
+# Add the size to the screen without switching to it, and say what happened.
+add_mode() {
+    check_size "$1" add-mode
+    is_wayland && fail "on Wayland, Cinnamon can only use sizes the screen offers"
+    want=$1
+    target=$(x11_mode "$want") || exit 1
+    set -- $target
+    if [ "$2" = added ]; then
+        echo "Added $want to screen $1."
+    else
+        echo "Screen $1 already offers $want."
+    fi
+}
+
+cinnamon_running() {
+    gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/DBus \
+        --method org.freedesktop.DBus.NameHasOwner org.Cinnamon 2>/dev/null | grep -q true
+}
+
+# Edit the panel layout (org.cinnamon enabled-applets, entries of the form
+# PANEL:ZONE:ORDER:UUID:ID). add: put the applets just left of the system
+# tray, or at the right end of the first panel. remove: take them off.
+# edit_panel add|remove [UUID...]: both applets unless given.
+edit_panel() {
+    action=$1
+    shift
+    [ $# -gt 0 ] || set -- "$tiling" "$resolutions"
+    python3 -I - "$action" "$@" <<'EOF'
+import sys
+from gi.repository import Gio
+action, uuids = sys.argv[1], sys.argv[2:]
+settings = Gio.Settings.new("org.cinnamon")
+entries = [e.split(":") for e in settings.get_strv("enabled-applets")]
+present = {e[3] for e in entries if len(e) >= 5}
+if action == "remove":
+    entries = [e for e in entries if len(e) < 5 or e[3] not in uuids]
+else:
+    missing = [u for u in uuids if u not in present]
+    if missing:
+        tray = next((e for e in entries if len(e) >= 5 and e[3] in
+                     ("systray@cinnamon.org", "xapp-status@cinnamon.org")), None)
+        if tray:
+            panel, zone, order = tray[0], tray[1], int(tray[2])
+            # Make room before the tray.
+            for e in entries:
+                if len(e) >= 5 and e[0] == panel and e[1] == zone and int(e[2]) >= order:
+                    e[2] = str(int(e[2]) + len(missing))
+        else:
+            panel = entries[0][0] if entries else "panel1"
+            zone = "right"
+            order = 1 + max([int(e[2]) for e in entries
+                             if len(e) >= 5 and e[0] == panel and e[1] == zone] or [0])
+        next_id = settings.get_int("next-applet-id")
+        for i, uuid in enumerate(missing):
+            entries.append([panel, zone, str(order + i), uuid, str(next_id)])
+            next_id += 1
+        settings.set_int("next-applet-id", next_id)
+settings.set_strv("enabled-applets", [":".join(e) for e in entries])
+Gio.Settings.sync()
+# The highest instance id of the applets, for noticing a panel reset.
+print(max([int(e[4]) for e in entries if len(e) >= 5 and e[3] in uuids] or [0]))
+EOF
+}
+
+# True if the panel layout was reset to Cinnamon's defaults since the
+# applets were added: they are gone and the instance ids start over.
+panel_was_reset() {
+    added_id=$(sed -n 2p "$marker" 2>/dev/null)
+    [ -n "$added_id" ] || return 1
+    gsettings get org.cinnamon enabled-applets | grep -q "$tiling" && return 1
+    [ "$(gsettings get org.cinnamon next-applet-id)" -le "$added_id" ]
+}
+
+setup() {
+    only=
+    case ${1:-} in
+        tiling) only=$tiling ;;
+        resolution) only=$resolutions ;;
+    esac
+    if [ "${1:-}" = --auto ]; then
+        case $(sed -n 1p "$marker" 2>/dev/null) in
+            removed) return ;;
+            "$setup_version") panel_was_reset || return ;;
+        esac
+        # At login, wait for Cinnamon to come up.
+        i=0
+        until cinnamon_running; do
+            i=$((i + 1))
+            [ $i -le 60 ] || exit 0
+            sleep 1
+        done
+    fi
+    # shellcheck disable=SC2086 # empty: both applets
+    added_id=$(edit_panel add $only) || fail "could not add the applets to the panel"
+    mkdir -p "$confdir"
+    printf '%s\n%s\n' "$setup_version" "$added_id" >"$marker"
+}
+
+remove() {
+    edit_panel remove "$@" >/dev/null || fail "could not change the panel"
+    mkdir -p "$confdir"
+    echo removed >"$marker"
+}
+
+# Save or load the settings of both applets (the keyboard shortcuts are
+# among them) as one JSON file; with a file chooser for the dialog modes.
+# settings_file export|import|save-dialog|load-dialog [FILE]
+settings_file() {
+    python3 -I - "$1" "${2:-}" "$tiling=$(instance "$tiling")" \
+        "$resolutions=$(instance "$resolutions")" <<'EOF'
+import json, os, subprocess, sys
+
+mode, path = sys.argv[1], sys.argv[2]
+applets = dict(a.split("=", 1) for a in sys.argv[3:])
+spices = os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"),
+                      "cinnamon", "spices")
+FORMAT = "cinnamon-tile-menu settings"
+# Settings that only show what is on the panel.
+PANEL_KEYS = ("showTilingMenu", "showResolutionMenu")
+
+
+def settings_path(uuid):
+    """The applet's own settings file: named after the uuid, or the instance."""
+    for name in (uuid, applets[uuid]):
+        candidate = os.path.join(spices, uuid, f"{name}.json")
+        if name and os.path.exists(candidate):
+            return candidate
+    return None
+
+
+def export(path):
+    out = {"format": FORMAT, "applets": {}}
+    for uuid in applets:
+        source = settings_path(uuid)
+        if source:
+            with open(source) as f:
+                data = json.load(f)
+            out["applets"][uuid] = {k: v["value"] for k, v in data.items()
+                                    if isinstance(v, dict) and "value" in v
+                                    and k not in PANEL_KEYS}
+    if not out["applets"]:
+        raise SystemExit("there are no settings yet: add the applets to the panel first")
+    with open(path + ".tmp", "w") as f:
+        json.dump(out, f, indent=4, ensure_ascii=False)
+        f.write("\n")
+    os.replace(path + ".tmp", path)
+    return "Saved to " + os.path.basename(path)
+
+
+def same_kind(a, b):
+    # bool is an int in Python; keep them apart. Whole numbers fit floats.
+    if isinstance(a, bool) or isinstance(b, bool):
+        return isinstance(a, bool) and isinstance(b, bool)
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        return True
+    return type(a) is type(b)
+
+
+def load(path):
+    try:
+        with open(path) as f:
+            data = json.load(f)
+    except (OSError, ValueError) as e:
+        raise SystemExit(f"cannot read {path}: {e}")
+    if not isinstance(data, dict) or data.get("format") != FORMAT:
+        raise SystemExit(f"{path} is not a Window Tiling settings file")
+    skipped = []
+    for uuid, values in data.get("applets", {}).items():
+        if uuid not in applets or not isinstance(values, dict):
+            continue
+        target = settings_path(uuid)
+        if not target:
+            skipped.append(uuid.split("@")[0])
+            continue
+        with open(target) as f:
+            current = json.load(f)
+        for key, value in values.items():
+            if key in PANEL_KEYS:
+                continue
+            entry = current.get(key)
+            if isinstance(entry, dict) and "value" in entry and same_kind(entry["value"], value):
+                entry["value"] = value
+        with open(target + ".tmp", "w") as f:
+            json.dump(current, f, indent=4)
+        os.replace(target + ".tmp", target)
+        # Make the running applet read its file again.
+        if applets[uuid]:
+            subprocess.run(["gdbus", "call", "--session", "--dest", "org.Cinnamon",
+                            "--object-path", "/org/Cinnamon", "--method",
+                            "org.Cinnamon.updateSetting", uuid, applets[uuid], "", ""],
+                           capture_output=True)
+    message = "Loaded from " + os.path.basename(path)
+    if skipped:
+        message += " (not for " + ", ".join(skipped) + ": not on the panel yet)"
+    return message
+
+
+def dialog(save):
+    import gi
+    gi.require_version("Gtk", "3.0")
+    from gi.repository import Gtk
+    chooser = Gtk.FileChooserNative.new(
+        "Save Window Tiling settings" if save else "Load Window Tiling settings", None,
+        Gtk.FileChooserAction.SAVE if save else Gtk.FileChooserAction.OPEN, None, None)
+    files = Gtk.FileFilter()
+    files.set_name("Settings files")
+    files.add_pattern("*.json")
+    chooser.add_filter(files)
+    if save:
+        chooser.set_current_name("tile-menu-settings.json")
+        chooser.set_do_overwrite_confirmation(True)
+    if chooser.run() != Gtk.ResponseType.ACCEPT:
+        return
+    chosen = chooser.get_filename()
+    try:
+        text, kind = (export if save else load)(chosen), Gtk.MessageType.INFO
+    except (SystemExit, OSError, ValueError) as e:
+        text, kind = str(e), Gtk.MessageType.ERROR
+    message = Gtk.MessageDialog(message_type=kind, buttons=Gtk.ButtonsType.OK,
+                                text="Window Tiling settings")
+    message.format_secondary_text(text)
+    message.run()
+
+
+if mode == "export":
+    print(export(path))
+elif mode == "import":
+    print(load(path))
+else:
+    dialog(mode == "save-dialog")
+EOF
+}
+
+cmd=${1:-}
+[ $# -gt 0 ] && shift
+case $cmd in
+    tile) [ $# -eq 1 ] || fail "usage: cinnamon-tile-menu tile auto|4|3|2|rows-3|rows-2|grid-2x2|grid-3x2|grid-4x2|restore"; tile "$1" ;;
+    resolution) [ $# -eq 1 ] || fail "usage: cinnamon-tile-menu resolution WIDTHxHEIGHT"; resolution "$1" ;;
+    add-mode) [ $# -eq 1 ] || fail "usage: cinnamon-tile-menu add-mode WIDTHxHEIGHT"; add_mode "$1" ;;
+    toggle) [ $# -eq 1 ] || fail "usage: cinnamon-tile-menu toggle snap|tileNew|disabled"; toggle "$1" ;;
+    get-toggles) get_toggles ;;
+    shortcuts) open_settings 2 ;;
+    settings) open_settings 0 ;;
+    setup)
+        case ${1:-} in
+            ''|--auto|tiling|resolution) setup "${1:-}" ;;
+            *) fail "usage: cinnamon-tile-menu setup [--auto|tiling|resolution]" ;;
+        esac ;;
+    remove) remove ;;
+    quit)
+        case ${1:-tiling} in
+            tiling) remove "$tiling" ;;
+            resolution) remove "$resolutions" ;;
+            *) fail "usage: cinnamon-tile-menu quit [tiling|resolution]" ;;
+        esac ;;
+    export|import) [ $# -eq 1 ] || fail "usage: cinnamon-tile-menu $cmd FILE"
+        out=$(settings_file "$cmd" "$1" 2>&1) || fail "$(echo "$out" | tail -1)"
+        echo "$out" ;;
+    save-dialog|load-dialog) settings_file "$cmd" ;;
+    *) sed -n '5,22s/^# \{0,1\}//p' "$0" >&2; exit 2 ;;
+esac

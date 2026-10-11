@@ -1,0 +1,8 @@
+{
+    "uuid": "tilemenu@dschaefer79",
+    "name": "Window Tiling",
+    "description": "Tile the windows of the current workspace into columns, rows or a grid, and snap dropped windows into place. The Cinnamon counterpart of plasma-tile-menu.",
+    "icon": "view-grid-symbolic",
+    "max-instances": 1,
+    "version": "1.14"
+}

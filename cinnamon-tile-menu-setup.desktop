@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 dschaefer79
+# Written entirely with Claude Code (Anthropic).
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Window Tiling panel setup
+Comment=Add the Window Tiling and Resolution applets to the panel once per user
+Exec=cinnamon-tile-menu setup --auto
+Terminal=false
+NoDisplay=true
+OnlyShowIn=X-Cinnamon;

@@ -1,0 +1,68 @@
+{
+    "section-panel": {
+        "type": "section",
+        "title": "Panel"
+    },
+    "showTilingMenu": {
+        "type": "switch",
+        "default": true,
+        "description": "Show the Window Tiling menu on the panel"
+    },
+    "showResolutionMenu": {
+        "type": "switch",
+        "default": true,
+        "description": "Show the Resolution menu on the panel"
+    },
+    "panelNote": {
+        "type": "label",
+        "description": "Turning a menu off takes it off the panel, as Quit in its menu does."
+    },
+    "section-resolutions": {
+        "type": "section",
+        "title": "Resolutions"
+    },
+    "resolutionsNote": {
+        "type": "label",
+        "description": "Resolutions shown in the menu, top to bottom, as WIDTHxHEIGHT. In an X11 session, a resolution your screen does not offer yet is added to it when you pick it from the menu, or right away. On Wayland, Cinnamon can only use sizes the screen offers."
+    },
+    "resolutions": {
+        "type": "list",
+        "description": "Resolutions",
+        "columns": [
+            {"id": "size", "title": "Resolution (for example 1920x1080)", "type": "string"}
+        ],
+        "default": [
+            {"size": "1920x1080"},
+            {"size": "1900x1000"},
+            {"size": "5120x1440"}
+        ]
+    },
+    "addToScreen": {
+        "type": "switch",
+        "default": true,
+        "description": "Add new resolutions to the screen right away (X11)"
+    },
+    "addNow": {
+        "type": "button",
+        "description": "Add all listed resolutions to the screen now (X11)",
+        "callback": "addAllNow"
+    },
+    "section-file": {
+        "type": "section",
+        "title": "Settings file"
+    },
+    "settingsFileNote": {
+        "type": "label",
+        "description": "The settings of both menus and the keyboard shortcuts, to keep a copy or to use them on another computer."
+    },
+    "saveSettingsFile": {
+        "type": "button",
+        "description": "Save settings to file…",
+        "callback": "saveSettingsFile"
+    },
+    "loadSettingsFile": {
+        "type": "button",
+        "description": "Load settings from file…",
+        "callback": "loadSettingsFile"
+    }
+}

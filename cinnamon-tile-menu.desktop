@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 dschaefer79
+# Written entirely with Claude Code (Anthropic).
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Window Tiling Menu
+Comment=Put the window tiling menu on the panel, also after Quit
+Icon=view-grid
+Exec=cinnamon-tile-menu setup tiling
+Terminal=false
+StartupNotify=false
+Categories=Utility;
+Keywords=tile;tiling;windows;columns;grid;
+OnlyShowIn=X-Cinnamon;

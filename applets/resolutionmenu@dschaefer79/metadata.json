@@ -1,0 +1,8 @@
+{
+    "uuid": "resolutionmenu@dschaefer79",
+    "name": "Resolution Menu",
+    "description": "Switch the screen resolution from a list you edit. The Cinnamon counterpart of plasma-tile-menu's Resolution widget.",
+    "icon": "video-display-symbolic",
+    "max-instances": 1,
+    "version": "1.14"
+}

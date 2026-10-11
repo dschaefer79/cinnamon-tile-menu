@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 dschaefer79
+# Written entirely with Claude Code (Anthropic).
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Resolution Menu
+Comment=Put the screen resolution menu on the panel, also after Quit
+Icon=video-display
+Exec=cinnamon-tile-menu setup resolution
+Terminal=false
+StartupNotify=false
+Categories=Utility;
+Keywords=resolution;screen;display;xrandr;
+OnlyShowIn=X-Cinnamon;
