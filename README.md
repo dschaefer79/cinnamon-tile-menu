@@ -63,13 +63,14 @@ assistant: all code, packaging and documentation.
 
 ## Installing
 
-On **Linux Mint 22.3** (Cinnamon 6.6, Ubuntu 24.04 base), download the
+On **Linux Mint 22.3** (Cinnamon 6.6, Ubuntu 24.04 base) and **Debian 13**
+(trixie, Cinnamon 6.4), download the
 package from the [latest release](https://github.com/dschaefer79/cinnamon-tile-menu/releases/latest)
 and install it:
 
 ```
-wget https://github.com/dschaefer79/cinnamon-tile-menu/releases/download/v1.15/cinnamon-tile-menu_1.15-1_all.deb
-sudo apt install ./cinnamon-tile-menu_1.15-1_all.deb
+wget https://github.com/dschaefer79/cinnamon-tile-menu/releases/download/v1.16/cinnamon-tile-menu_1.16-1_all.deb
+sudo apt install ./cinnamon-tile-menu_1.16-1_all.deb
 ```
 
 Both applets are put on the panel at the next login, or right away after
@@ -78,20 +79,20 @@ Both applets are put on the panel at the next login, or right away after
 On **Fedora 45**:
 
 ```
-sudo dnf install https://github.com/dschaefer79/cinnamon-tile-menu/releases/download/v1.15/cinnamon-tile-menu-1.15-1.fc45.noarch.rpm
+sudo dnf install https://github.com/dschaefer79/cinnamon-tile-menu/releases/download/v1.16/cinnamon-tile-menu-1.16-1.fc45.noarch.rpm
 ```
 
 ## Building the .deb
 
 ```
-git archive --prefix=cinnamon-tile-menu-1.15/ -o cinnamon-tile-menu-1.15.tar.gz HEAD
-packaging/build-deb.sh cinnamon-tile-menu-1.15.tar.gz 1.15 .
+git archive --prefix=cinnamon-tile-menu-1.16/ -o cinnamon-tile-menu-1.16.tar.gz HEAD
+packaging/build-deb.sh cinnamon-tile-menu-1.16.tar.gz 1.16 .
 ```
 
 ## Building the RPM
 
 ```
-git archive --prefix=cinnamon-tile-menu-1.15/ -o ~/rpmbuild/SOURCES/cinnamon-tile-menu-1.15.tar.gz HEAD
+git archive --prefix=cinnamon-tile-menu-1.16/ -o ~/rpmbuild/SOURCES/cinnamon-tile-menu-1.16.tar.gz HEAD
 rpmbuild -ba cinnamon-tile-menu.spec
 ```
 

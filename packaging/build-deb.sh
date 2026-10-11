@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 dschaefer79
 # Written entirely with Claude Code (Anthropic).
-# Build cinnamon-tile-menu as a .deb for Linux Mint 22.3 (needs dpkg-deb).
+# Build cinnamon-tile-menu as a .deb for Debian 13 and Linux Mint 22.3
+# (needs dpkg-deb).
 #   build-deb.sh SOURCE_TARBALL VERSION OUTDIR
 # The tarball is a git archive with the top directory cinnamon-tile-menu-VERSION.
 set -eu
@@ -57,9 +58,9 @@ License: GPL-3.0-or-later
  version 3 can be found in "/usr/share/common-licenses/GPL-3".
 EOF
 cat > "$work/changelog" <<EOF
-$name ($version-$revision) noble; urgency=medium
+$name ($version-$revision) stable; urgency=medium
 
-  * Package for Linux Mint 22.3 (Ubuntu 24.04 noble), built from
+  * Package for Debian 13 (trixie) and Linux Mint 22.3, built from
     https://github.com/dschaefer79/$name tag v$version.
 
  -- dschaefer79 <7472357+dschaefer79@users.noreply.github.com>  $(date -R)

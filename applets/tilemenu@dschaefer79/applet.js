@@ -99,6 +99,7 @@ class TileMenuApplet extends Applet.IconApplet {
         Gtk.IconTheme.get_default().append_search_path(`${metadata.path}/icons`);
 
         this.set_applet_icon_symbolic_name('view-grid-symbolic');
+        this._uuid = metadata.uuid;
         this.settings = new Settings.AppletSettings(this, metadata.uuid, instanceId);
         for (const key of KEYS)
             this.settings.bind(key, key, () => this._settingsChanged());
@@ -284,19 +285,37 @@ class TileMenuApplet extends Applet.IconApplet {
         return _('Drop a window to snap it into place.');
     }
 
+    // Cinnamon 6.6 and later keep an applet's shortcuts with addXletHotKey;
+    // earlier versions (Debian 13) with addHotKey, under a name of our own.
+    _addHotKey(name, keys, callback) {
+        const kb = Main.keybindingManager;
+        if (kb.addXletHotKey)
+            kb.addXletHotKey(this, name, keys, callback);
+        else
+            kb.addHotKey(`${this._uuid}-${name}`, keys, callback);
+    }
+
+    _removeHotKey(name) {
+        const kb = Main.keybindingManager;
+        if (kb.removeXletHotKey)
+            kb.removeXletHotKey(this, name);
+        else
+            kb.removeHotKey(`${this._uuid}-${name}`);
+    }
+
     _updateShortcuts() {
         this._updateAccels();
         for (const [key, action] of Object.entries(TILE_SHORTCUTS))
-            Main.keybindingManager.addXletHotKey(this, key, this[key], () => this.tiler.run(action));
+            this._addHotKey(key, this[key], () => this.tiler.run(action));
         for (const [name, {shortcut}] of Object.entries(TOGGLES))
-            Main.keybindingManager.addXletHotKey(this, shortcut, this[shortcut], () => this.toggle(name));
+            this._addHotKey(shortcut, this[shortcut], () => this.toggle(name));
     }
 
     _removeShortcuts() {
         for (const key of Object.keys(TILE_SHORTCUTS))
-            Main.keybindingManager.removeXletHotKey(this, key);
+            this._removeHotKey(key);
         for (const {shortcut} of Object.values(TOGGLES))
-            Main.keybindingManager.removeXletHotKey(this, shortcut);
+            this._removeHotKey(shortcut);
     }
 
     // Physical screen widths from Muffin's DisplayConfig, by monitor index.

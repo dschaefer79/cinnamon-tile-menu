@@ -5,7 +5,10 @@
 # System Settings > Resolution Menu: every setting of the Resolution applet,
 # the same as its own settings window. Installed by cinnamon-tile-menu.
 
-from bin.SettingsWidgets import SidePage
+try:
+    from bin.SettingsWidgets import SidePage
+except ImportError:  # Cinnamon before 6.6
+    from SettingsWidgets import SidePage
 from cs_tilemenu import build_applet_pages
 
 

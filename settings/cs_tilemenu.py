@@ -12,9 +12,18 @@ import subprocess
 
 from gi.repository import Gio, GLib, Gtk
 
-from bin import KeybindingTable
-from bin.JsonSettingsWidgets import *  # noqa: F401,F403 (widgets and pages)
-from bin.SettingsWidgets import SidePage
+# Cinnamon 6.6 and later import the settings helpers from bin; earlier
+# versions (Debian 13) have bin itself on the path and no KeybindingTable.
+try:
+    from bin.JsonSettingsWidgets import *  # noqa: F401,F403 (widgets and pages)
+    from bin.SettingsWidgets import SidePage
+except ImportError:
+    from JsonSettingsWidgets import *  # noqa: F401,F403
+    from SettingsWidgets import SidePage
+try:
+    from bin import KeybindingTable
+except ImportError:
+    KeybindingTable = None
 
 APPLETS_DIR = "/usr/share/cinnamon/applets"
 SPICES_DIR = os.path.join(GLib.get_user_config_dir(), "cinnamon", "spices")
@@ -102,7 +111,10 @@ def build_applet_pages(side_page, uuid, name, panel_name):
     # (the uuid, or the instance id for applets that can be added more than
     # once); changes still go to the applet by its instance id.
     config_id = os.path.basename(path)[:-len(".json")]
-    handler = JSONSettingsHandler(path, uuid, config_id, changed)
+    try:
+        handler = JSONSettingsHandler(path, uuid, config_id, changed)
+    except TypeError:  # Cinnamon before 6.6: the file and the callback only
+        handler = JSONSettingsHandler(path, changed)
     with open(os.path.join(APPLETS_DIR, uuid, "settings-schema.json")) as f:
         schema = json.load(f)
     # Only settings the applet's file has (an older file may lack new ones).
@@ -117,8 +129,9 @@ def build_applet_pages(side_page, uuid, name, panel_name):
             return CallbackButton(item, uuid, instance)
         if kind == "label":
             return Text(_(item["description"]))
-        if kind == "keybinding" and (not instance or KeybindingTable.get_default()
-                                     .lookup_json_keybinding(uuid, config_id, key) is None):
+        if kind == "keybinding" and KeybindingTable and (
+                not instance or KeybindingTable.get_default()
+                .lookup_json_keybinding(uuid, config_id, key) is None):
             if shortcut_note:
                 return None
             shortcut_note.append(key)

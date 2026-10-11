@@ -5,7 +5,7 @@
 %global applets %{_datadir}/cinnamon/applets
 
 Name:           cinnamon-tile-menu
-Version:        1.15
+Version:        1.16
 Release:        1%{?dist}
 Summary:        Cinnamon panel applets for window tiling and screen resolution
 License:        GPL-3.0-or-later
@@ -110,6 +110,12 @@ done
 %{applets}/resolutionmenu@dschaefer79/
 
 %changelog
+* Sun Oct 11 2026 dschaefer79 <7472357+dschaefer79@users.noreply.github.com> - 1.16-1
+- Works with Cinnamon 6.4 (Debian 13) too: the shortcuts are bound with
+  addHotKey where Cinnamon has no addXletHotKey, and the System Settings
+  pages use the older settings modules there
+- The .deb is built for Debian 13 and Linux Mint 22.3
+
 * Sun Oct 11 2026 dschaefer79 <7472357+dschaefer79@users.noreply.github.com> - 1.15-1
 - Works with Cinnamon 6.6 (Linux Mint 22.3): the applets load their own
   modules with require() where Cinnamon has no getCurrentExtension()
