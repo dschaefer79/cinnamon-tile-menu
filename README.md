@@ -75,6 +75,12 @@ sudo apt install ./cinnamon-tile-menu_1.15-1_all.deb
 Both applets are put on the panel at the next login, or right away after
 `cinnamon-tile-menu setup`.
 
+On **Fedora 45**:
+
+```
+sudo dnf install https://github.com/dschaefer79/cinnamon-tile-menu/releases/download/v1.15/cinnamon-tile-menu-1.15-1.fc45.noarch.rpm
+```
+
 ## Building the .deb
 
 ```
