@@ -5,7 +5,7 @@
 %global applets %{_datadir}/cinnamon/applets
 
 Name:           cinnamon-tile-menu
-Version:        1.16
+Version:        1.17
 Release:        1%{?dist}
 Summary:        Cinnamon panel applets for window tiling and screen resolution
 License:        GPL-3.0-or-later
@@ -110,6 +110,17 @@ done
 %{applets}/resolutionmenu@dschaefer79/
 
 %changelog
+* Sun Oct 11 2026 dschaefer79 <7472357+dschaefer79@users.noreply.github.com> - 1.17-1
+- Automatic tiling snaps dropped windows again, with and without Shift:
+  Cinnamon 6.7 passes the display twice to the window drag signals, so the
+  dropped window was never recognised
+- Resolution: its settings window opens again. It is laid out in pages
+  like the Window Tiling settings (Resolution, Settings file); before, the
+  window stopped with an error, as Cinnamon looks for a description on
+  section headers without a layout
+- Packages for Fedora 44 and 45, Ubuntu 26.04 and 26.10, Debian 13 and
+  Linux Mint 22.3
+
 * Sun Oct 11 2026 dschaefer79 <7472357+dschaefer79@users.noreply.github.com> - 1.16-1
 - Works with Cinnamon 6.4 (Debian 13) too: the shortcuts are bound with
   addHotKey where Cinnamon has no addXletHotKey, and the System Settings

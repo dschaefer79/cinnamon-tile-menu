@@ -67,16 +67,17 @@ From the [latest GitHub release](https://github.com/dschaefer79/cinnamon-tile-me
 
 | System | Desktop | Package |
 |---|---|---|
-| Fedora 45 | Cinnamon 6.7 | `cinnamon-tile-menu-1.16-1.fc45.noarch.rpm` |
-| Fedora 44 | Cinnamon 6.6 | `cinnamon-tile-menu-1.16-1.fc44.noarch.rpm` |
-| Ubuntu 26.10 | Cinnamon 6.6 | `cinnamon-tile-menu_1.16-1_all.deb` |
-| Linux Mint 22.3 | Cinnamon 6.6 | `cinnamon-tile-menu_1.16-1_all.deb` |
-| Debian 13 (trixie) | Cinnamon 6.4 | `cinnamon-tile-menu_1.16-1_all.deb` |
+| Fedora 45 | Cinnamon 6.7 | `cinnamon-tile-menu-1.17-1.fc45.noarch.rpm` |
+| Fedora 44 | Cinnamon 6.6 | `cinnamon-tile-menu-1.17-1.fc44.noarch.rpm` |
+| Ubuntu 26.10 | Cinnamon 6.6 | `cinnamon-tile-menu_1.17-1_all.deb` |
+| Ubuntu 26.04 | Cinnamon 6.4 | `cinnamon-tile-menu_1.17-1_all.deb` |
+| Linux Mint 22.3 | Cinnamon 6.6 | `cinnamon-tile-menu_1.17-1_all.deb` |
+| Debian 13 (trixie) | Cinnamon 6.4 | `cinnamon-tile-menu_1.17-1_all.deb` |
 
 On Fedora:
 
 ```
-sudo dnf install https://github.com/dschaefer79/cinnamon-tile-menu/releases/download/v1.16/cinnamon-tile-menu-1.16-1.fc45.noarch.rpm
+sudo dnf install https://github.com/dschaefer79/cinnamon-tile-menu/releases/download/v1.17/cinnamon-tile-menu-1.17-1.fc45.noarch.rpm
 ```
 
 (`fc44` instead of `fc45` on Fedora 44).
@@ -84,8 +85,8 @@ sudo dnf install https://github.com/dschaefer79/cinnamon-tile-menu/releases/down
 On Ubuntu, Debian and Linux Mint:
 
 ```
-wget https://github.com/dschaefer79/cinnamon-tile-menu/releases/download/v1.16/cinnamon-tile-menu_1.16-1_all.deb
-sudo apt install ./cinnamon-tile-menu_1.16-1_all.deb
+wget https://github.com/dschaefer79/cinnamon-tile-menu/releases/download/v1.17/cinnamon-tile-menu_1.17-1_all.deb
+sudo apt install ./cinnamon-tile-menu_1.17-1_all.deb
 ```
 
 Both applets are put on the panel at the next login, or right away after
@@ -94,14 +95,14 @@ Both applets are put on the panel at the next login, or right away after
 ## Building the .deb
 
 ```
-git archive --prefix=cinnamon-tile-menu-1.16/ -o cinnamon-tile-menu-1.16.tar.gz HEAD
-packaging/build-deb.sh cinnamon-tile-menu-1.16.tar.gz 1.16 .
+git archive --prefix=cinnamon-tile-menu-1.17/ -o cinnamon-tile-menu-1.17.tar.gz HEAD
+packaging/build-deb.sh cinnamon-tile-menu-1.17.tar.gz 1.17 .
 ```
 
 ## Building the RPM
 
 ```
-git archive --prefix=cinnamon-tile-menu-1.16/ -o ~/rpmbuild/SOURCES/cinnamon-tile-menu-1.16.tar.gz HEAD
+git archive --prefix=cinnamon-tile-menu-1.17/ -o ~/rpmbuild/SOURCES/cinnamon-tile-menu-1.17.tar.gz HEAD
 rpmbuild -ba cinnamon-tile-menu.spec
 ```
 

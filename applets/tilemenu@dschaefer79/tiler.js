@@ -102,8 +102,12 @@ var Tiler = class Tiler {
         this._enabled = true;
         this.loadSettings();
         const display = global.display;
-        this._connect(display, 'grab-op-begin', (d, w, op) => this._grabBegin(w, op));
-        this._connect(display, 'grab-op-end', (d, w) => this._grabEnd(w));
+        // Some Muffin versions pass the display twice: (display, display,
+        // window, op), others (display, window, op). Take the window and the
+        // op from the end.
+        const grabArgs = args => [args[args.length - 2], args[args.length - 1]];
+        this._connect(display, 'grab-op-begin', (...args) => this._grabBegin(...grabArgs(args)));
+        this._connect(display, 'grab-op-end', (...args) => this._grabEnd(grabArgs(args)[0]));
         this._connect(display, 'window-created', (d, w) => this._windowCreated(w));
     }
 

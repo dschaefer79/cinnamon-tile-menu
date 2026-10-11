@@ -4,5 +4,5 @@
     "description": "Switch the screen resolution from a list you edit. The Cinnamon counterpart of plasma-tile-menu's Resolution widget.",
     "icon": "video-display-symbolic",
     "max-instances": 1,
-    "version": "1.16"
+    "version": "1.17"
 }

@@ -1,7 +1,53 @@
 {
-    "section-panel": {
-        "type": "section",
-        "title": "Panel"
+    "layout": {
+        "type": "layout",
+        "pages": [
+            "page-resolutions",
+            "page-file"
+        ],
+        "page-resolutions": {
+            "type": "page",
+            "title": "Resolution",
+            "sections": [
+                "section-panel",
+                "section-resolutions"
+            ]
+        },
+        "page-file": {
+            "type": "page",
+            "title": "Settings file",
+            "sections": [
+                "section-file"
+            ]
+        },
+        "section-panel": {
+            "type": "section",
+            "title": "Panel",
+            "keys": [
+                "showTilingMenu",
+                "showResolutionMenu",
+                "panelNote"
+            ]
+        },
+        "section-resolutions": {
+            "type": "section",
+            "title": "Resolutions",
+            "keys": [
+                "resolutionsNote",
+                "resolutions",
+                "addToScreen",
+                "addNow"
+            ]
+        },
+        "section-file": {
+            "type": "section",
+            "title": "Settings file",
+            "keys": [
+                "settingsFileNote",
+                "saveSettingsFile",
+                "loadSettingsFile"
+            ]
+        }
     },
     "showTilingMenu": {
         "type": "switch",
@@ -17,10 +63,6 @@
         "type": "label",
         "description": "Turning a menu off takes it off the panel, as Quit in its menu does."
     },
-    "section-resolutions": {
-        "type": "section",
-        "title": "Resolutions"
-    },
     "resolutionsNote": {
         "type": "label",
         "description": "Resolutions shown in the menu, top to bottom, as WIDTHxHEIGHT. In an X11 session, a resolution your screen does not offer yet is added to it when you pick it from the menu, or right away. On Wayland, Cinnamon can only use sizes the screen offers."
@@ -29,12 +71,22 @@
         "type": "list",
         "description": "Resolutions",
         "columns": [
-            {"id": "size", "title": "Resolution (for example 1920x1080)", "type": "string"}
+            {
+                "id": "size",
+                "title": "Resolution (for example 1920x1080)",
+                "type": "string"
+            }
         ],
         "default": [
-            {"size": "1920x1080"},
-            {"size": "1900x1000"},
-            {"size": "5120x1440"}
+            {
+                "size": "1920x1080"
+            },
+            {
+                "size": "1900x1000"
+            },
+            {
+                "size": "5120x1440"
+            }
         ]
     },
     "addToScreen": {
@@ -46,10 +98,6 @@
         "type": "button",
         "description": "Add all listed resolutions to the screen now (X11)",
         "callback": "addAllNow"
-    },
-    "section-file": {
-        "type": "section",
-        "title": "Settings file"
     },
     "settingsFileNote": {
         "type": "label",
